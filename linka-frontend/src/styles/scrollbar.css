@@ -1,0 +1,26 @@
+/* Tamaño del scrollbar */
+::-webkit-scrollbar {
+  width: 6px;   /* vertical */
+  height: 6px;  /* horizontal */
+}
+
+/* Fondo del scrollbar */
+::-webkit-scrollbar-track {
+  background: #EEF2F633; /* negro */
+}
+
+/* Thumb (barra desplazable) */
+::-webkit-scrollbar-thumb {
+  background-color: #B1B1B1; /* gris claro */
+  border-radius: 10px;
+}
+
+/* Hover en el thumb */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #727272; /* gris más oscuro */
+}
+
+/* Opcional: bordes redondeados del track */
+::-webkit-scrollbar-track-piece {
+  border-radius: 10px;
+}
