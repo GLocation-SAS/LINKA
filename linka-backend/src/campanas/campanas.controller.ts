@@ -7,10 +7,15 @@ import {
     ApiBody,
     ApiParam,
     ApiQuery,
+    ApiBearerAuth,
 } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/Guards/auth.guard';
 
 @ApiTags('Campañas')
+@ApiBearerAuth()
 @Controller('campanas')
+@UseGuards(AuthGuard)
 export class CampanasController {
     constructor(private readonly campanasService: CampanasService) { }
 

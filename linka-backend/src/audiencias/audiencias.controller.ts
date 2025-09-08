@@ -6,11 +6,16 @@ import {
     ApiResponse,
     ApiBody,
     ApiParam,
-    ApiQuery
+    ApiQuery,
+    ApiBearerAuth
 } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/Guards/auth.guard';
 
 @ApiTags('Audiencias')
+@ApiBearerAuth()
 @Controller('audiencias')
+@UseGuards(AuthGuard)
 export class AudienciasController {
     constructor(private readonly audienciasService: AudienciasService) { }
     @Post('crear')

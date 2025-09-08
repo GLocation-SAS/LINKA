@@ -7,10 +7,15 @@ import {
     ApiBody,
     ApiParam,
     ApiQuery,
+    ApiBearerAuth,
 } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/Guards/auth.guard';
 
 @ApiTags('Mensajes')
+@ApiBearerAuth()
 @Controller('mensajes')
+@UseGuards(AuthGuard)
 export class MensajesController {
     constructor(private readonly mensajesService: MensajesService) { }
 
