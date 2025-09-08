@@ -5,10 +5,15 @@ import {
   ApiOperation,
   ApiQuery,
   ApiResponse,
+  ApiBearerAuth
 } from '@nestjs/swagger';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/Guards/auth.guard';
 
 @ApiTags('Historial')
+@ApiBearerAuth()
 @Controller('historial')
+@UseGuards(AuthGuard)
 export class HistorialController {
   constructor(private readonly historialService: HistorialService) {}
 
