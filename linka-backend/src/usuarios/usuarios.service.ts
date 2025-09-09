@@ -9,18 +9,42 @@ export class UsuariosService {
     this.firestore = this.firebaseApp.firestore();
   }
 
-  async crearUsuario(uid: string, email: string, displayName: string, rol: string, estado: string) {
-    await this.firestore.collection('usuarios').doc(uid).set({
-      email,
-      email_lower: email.toLowerCase(),
-      display_name: displayName,
-      display_name_lower: displayName.toLowerCase(),
-      rol,
-      estado, // 👈 nuevo campo
-      fecha_creacion: admin.firestore.FieldValue.serverTimestamp(),
-    });
-    return { uid, email, displayName, rol, estado };
+  async crearUsuario(
+    uid: string,
+    email: string,
+    displayName: string,
+    rol: string,
+    estado: string,
+  ) {
+    const userRef = this.firestore.collection('usuarios').doc(uid);
+    const existingDoc = await userRef.get();
+
+    if (existingDoc.exists) {
+      // ⚡ Solo actualizamos email, rol y estado
+      const updateData = {
+        email,
+        email_lower: email.toLowerCase(),
+      };
+      await userRef.set(updateData, { merge: true });
+    } else {
+      // ⚡ Si es nuevo usuario, se crea con todos los campos
+      const newData = {
+        email,
+        email_lower: email.toLowerCase(),
+        display_name: displayName,
+        display_name_lower: displayName.toLowerCase(),
+        rol,
+        estado,
+        fecha_creacion: admin.firestore.FieldValue.serverTimestamp(),
+      };
+      await userRef.set(newData);
+    }
+
+    const updatedDoc = await userRef.get();
+    return { uid, ...updatedDoc.data() };
   }
+
+
 
   async obtenerUsuario(uid: string) {
     const doc = await this.firestore.collection('usuarios').doc(uid).get();

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, Query,Patch } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Query, Patch } from '@nestjs/common';
 import { CampanasService } from './campanas.service';
 import {
     ApiTags,
@@ -97,16 +97,27 @@ export class CampanasController {
                         nombre: 'Campaña Septiembre',
                         fecha_creacion: '2025-09-05T14:00:00.000Z',
                         idUsuario: 'uid123',
+                        audienciasCount: 2,   // 👈 número de audiencias asociadas
+                        contactosCount: 45,   // 👈 número de contactos en esas audiencias
+                    },
+                    {
+                        idCampana: 'cmp124',
+                        nombre: 'Campaña Octubre',
+                        fecha_creacion: '2025-09-07T09:30:00.000Z',
+                        idUsuario: 'uid456',
+                        audienciasCount: 0,   // 👈 si no tiene audiencias
+                        contactosCount: 0,    // 👈 si no tiene contactos
                     },
                 ],
                 pagination: {
                     page: 1,
                     limit: 5,
-                    totalCount: 3,
+                    totalCount: 2,
                     totalPages: 1,
                     hasNextPage: false,
                 },
-            },
+            }
+            ,
         },
     })
     async listarCampanas(

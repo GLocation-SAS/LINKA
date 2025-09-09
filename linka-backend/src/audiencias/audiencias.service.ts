@@ -328,10 +328,24 @@ export class AudienciasService {
      */
     async eliminarAudiencia(idAudiencia: string) {
         const query = `
+    BEGIN TRANSACTION;
+
+      -- 1) Borra contactos de la audiencia
+      DELETE FROM \`${this.projectId}.${this.dataset}.Contactos\`
+      WHERE idAudiencia = @idAudiencia;
+
+      -- 2) Borra la audiencia
       DELETE FROM \`${this.projectId}.${this.dataset}.Audiencias\`
-      WHERE idAudiencia = @idAudiencia
-    `;
-        await this.bigquery.query({ query, params: { idAudiencia } });
-        return { message: '🗑️ Audiencia eliminada', idAudiencia };
+      WHERE idAudiencia = @idAudiencia;
+
+    COMMIT TRANSACTION;
+  `;
+
+        await this.bigquery.query({
+            query,
+            params: { idAudiencia },
+        });
+
+        return { message: '🗑️ Audiencia y contactos eliminados', idAudiencia };
     }
 }

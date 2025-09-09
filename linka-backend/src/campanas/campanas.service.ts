@@ -43,44 +43,64 @@ export class CampanasService {
         page = 1,
         limit = 10,
     ) {
-        let conditions: string[] = [];
-        let params: Record<string, any> = {};
+        const conditions: string[] = [];
+        const params: Record<string, any> = {};
 
         if (nombre) {
             conditions.push(`nombre LIKE @nombre`);
             params.nombre = `%${nombre}%`;
         }
-
         if (fechaInicio) {
             conditions.push(`fecha_creacion >= @fechaInicio`);
             params.fechaInicio = fechaInicio;
         }
-
         if (fechaFin) {
             conditions.push(`fecha_creacion <= @fechaFin`);
             params.fechaFin = fechaFin;
         }
 
-        // Construcción dinámica del WHERE
         const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+        const offset = (page - 1) * limit;
 
-        // Query principal
+        // CTEs para evitar duplicados y mantener el paginado correcto
         const query = `
+    WITH base AS (
       SELECT idCampana, nombre, fecha_creacion, idUsuario
       FROM \`${this.projectId}.${this.dataset}.Campanas\`
       ${whereClause}
-      ORDER BY fecha_creacion DESC
-      LIMIT @limit OFFSET @offset
-    `;
+    ),
+    aud AS (
+      SELECT idCampana, COUNT(*) AS audienciasCount
+      FROM \`${this.projectId}.${this.dataset}.Audiencias\`
+      GROUP BY idCampana
+    ),
+    cont AS (
+      -- Variante cuando Contactos tiene columna idAudiencia
+      SELECT a.idCampana, COUNT(*) AS contactosCount
+      FROM \`${this.projectId}.${this.dataset}.Audiencias\` a
+      JOIN \`${this.projectId}.${this.dataset}.Contactos\` c
+        ON c.idAudiencia = a.idAudiencia
+      GROUP BY a.idCampana
+    )
+    SELECT
+      b.idCampana,
+      b.nombre,
+      b.fecha_creacion,
+      b.idUsuario,
+      IFNULL(aud.audienciasCount, 0) AS audienciasCount,
+      IFNULL(cont.contactosCount, 0) AS contactosCount
+    FROM base b
+    LEFT JOIN aud ON aud.idCampana = b.idCampana
+    LEFT JOIN cont ON cont.idCampana = b.idCampana
+    ORDER BY b.fecha_creacion DESC
+    LIMIT @limit OFFSET @offset
+  `;
 
-        // Query para contar total
         const countQuery = `
-      SELECT COUNT(*) as total
-      FROM \`${this.projectId}.${this.dataset}.Campanas\`
-      ${whereClause}
-    `;
-
-        const offset = (page - 1) * limit;
+    SELECT COUNT(*) AS total
+    FROM \`${this.projectId}.${this.dataset}.Campanas\`
+    ${whereClause}
+  `;
 
         const [rows] = await this.bigquery.query({
             query,
@@ -106,6 +126,7 @@ export class CampanasService {
             },
         };
     }
+
 
     /**
  * Listar todas las campañas (sin paginación)
@@ -171,14 +192,37 @@ export class CampanasService {
 
 
     /**
-     * Eliminar campaña
+     * Eliminar una campaña y, en cascada, sus audiencias y contactos
      */
     async eliminarCampana(idCampana: string) {
         const query = `
+    BEGIN TRANSACTION;
+
+      -- 1) Borra contactos de todas las audiencias de la campaña
+      DELETE FROM \`${this.projectId}.${this.dataset}.Contactos\`
+      WHERE idAudiencia IN (
+        SELECT a.idAudiencia
+        FROM \`${this.projectId}.${this.dataset}.Audiencias\` a
+        WHERE a.idCampana = @idCampana
+      );
+
+      -- 2) Borra audiencias de la campaña
+      DELETE FROM \`${this.projectId}.${this.dataset}.Audiencias\`
+      WHERE idCampana = @idCampana;
+
+      -- 3) Borra la campaña
       DELETE FROM \`${this.projectId}.${this.dataset}.Campanas\`
-      WHERE idCampana = @idCampana
-    `;
-        await this.bigquery.query({ query, params: { idCampana } });
-        return { message: '🗑️ Campaña eliminada', idCampana };
+      WHERE idCampana = @idCampana;
+
+    COMMIT TRANSACTION;
+  `;
+
+        await this.bigquery.query({
+            query,
+            params: { idCampana },
+        });
+
+        return { message: '🗑️ Campaña, audiencias y contactos eliminados', idCampana };
     }
+
 }

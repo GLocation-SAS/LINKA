@@ -59,7 +59,7 @@ export class HistorialService {
     // Unificar y enriquecer con usuarios
     const allEvents = [
       ...campanas.map((c: any) => ({
-        tipo: 'campaña',
+        tipo: 'campana',
         accion: `creó la campaña "${c.nombre}"`,
         fecha: c.fecha_creacion,
         idUsuario: c.idUsuario,
