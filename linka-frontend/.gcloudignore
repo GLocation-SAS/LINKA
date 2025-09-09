@@ -1,0 +1,7 @@
+# Ignora todo por defecto
+**
+
+# Incluye solo lo necesario
+!.gcloudignore
+!app.yaml
+!dist/**

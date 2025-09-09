@@ -180,7 +180,7 @@ export default function RegisterPage() {
             size="large"
             onClick={handleRegister}
           >
-            REGISTRARSE
+            Registrarse
           </Button>
 
           <Typography textAlign="center" fontSize={14}>
@@ -215,9 +215,9 @@ export default function RegisterPage() {
       <FeedbackModal
         open={showSuccess}
         type="success"
-        title="✅ Registro exitoso"
+        title="Registro exitoso"
         description="Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión."
-        confirmLabel="Ir a iniciar sesión"
+        confirmLabel="Aceptar"
         onClose={handleSuccessClose}
       />
 

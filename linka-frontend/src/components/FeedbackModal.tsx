@@ -11,7 +11,7 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import InfoIcon from "@mui/icons-material/Info";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import HelpIcon from "@mui/icons-material/Help"; // 👈 en vez de HelpOutlineIcon
 import type { ReactNode } from "react";
 
 type ModalType = "success" | "error" | "info" | "confirm";
@@ -44,28 +44,28 @@ export default function FeedbackModal({
   // Ícono + color por tipo
   const map = {
     success: {
-      icon: <CheckCircleIcon sx={{ fontSize: 80, color: theme.palette.success.main }} />,
+      icon: <CheckCircleIcon sx={{ fontSize: 100, color: theme.palette.success.main }} />,
       color: theme.palette.success.main,
       defaultTitle: "¡Operación exitosa!",
       defaultConfirm: "Aceptar",
       showCancel: false,
     },
     error: {
-      icon: <HighlightOffIcon sx={{ fontSize: 80, color: theme.palette.error.main }} />,
+      icon: <HighlightOffIcon sx={{ fontSize: 100, color: theme.palette.error.main }} />,
       color: theme.palette.error.main,
       defaultTitle: "Ocurrió un error",
       defaultConfirm: "Aceptar",
       showCancel: false,
     },
     info: {
-      icon: <InfoIcon sx={{ fontSize: 80, color: theme.palette.info.main }} />,
+      icon: <InfoIcon sx={{ fontSize: 100, color: theme.palette.info.main }} />,
       color: theme.palette.info.main,
       defaultTitle: "Información",
       defaultConfirm: "Entendido",
       showCancel: false,
     },
     confirm: {
-      icon: <HelpOutlineIcon sx={{ fontSize: 80, color: theme.palette.secondary.main }} />,
+      icon: <HelpIcon sx={{ fontSize: 100, color: theme.palette.secondary.main }} />,
       color: theme.palette.secondary.main,
       defaultTitle: "¿Estás seguro?",
       defaultConfirm: "Aceptar",
@@ -92,7 +92,7 @@ export default function FeedbackModal({
         {map.icon}
       </Box>
 
-      <DialogTitle sx={{ textAlign: "center", fontWeight: 700, fontSize: 30 }}>
+      <DialogTitle sx={{ textAlign: "center", fontWeight: 700, fontSize: 35, width: '100%' }}>
         {title || map.defaultTitle}
       </DialogTitle>
 

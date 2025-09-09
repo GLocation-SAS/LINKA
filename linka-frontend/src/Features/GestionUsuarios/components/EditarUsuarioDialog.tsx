@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: (data: { rol: string; estado: string }) => void;
+  onSave: (data: { displayName:string;  rol: string; estado: string }) => void;
   usuario: any;
 }
 
@@ -39,7 +39,7 @@ export default function EditarUsuarioDialog({
   }, [usuario]);
 
   const handleSave = () => {
-    onSave({ rol, estado });
+    onSave({ displayName,rol, estado });
   };
 
   return (
@@ -60,7 +60,7 @@ export default function EditarUsuarioDialog({
             label="Nombre"
             value={displayName}
             fullWidth
-            disabled
+            onChange={(e) => setDisplayName(e.target.value)}
           />
 
           {/* Rol - Editable */}

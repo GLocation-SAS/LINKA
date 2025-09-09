@@ -5,6 +5,8 @@ import theme from "./theme.ts";
 import "./styles/fonts.css"
 import "./styles/scrollbar.css"
 import AppRoutes from "./routes/index.tsx";
+import "react-phone-input-2/lib/style.css";
+
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

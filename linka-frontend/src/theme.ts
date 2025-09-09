@@ -86,13 +86,28 @@ const theme = createTheme({
                 {
                     props: { variant: "outlined", color: "info" },
                     style: {
-                        borderColor: "#205577",
-                        color: "#205577",
-                        "&:hover": { borderColor: "#306C92", color: "#306C92" },
-                        "&:active": { borderColor: "#114363", color: "#114363" },
-                        "&.Mui-disabled": {
-                            borderColor: "rgba(32,85,119,0.1)",
-                            color: "rgba(32,85,119,0.4)",
+                        '&&': { // ⬅️ Aumenta especificidad para TODAS las reglas
+                            backgroundColor: "rgba(32,85,119,0.10)",
+                            borderColor: "#205577",
+                            color: "#205577",
+
+                            '&:hover': {
+                                backgroundColor: "rgba(32,85,119,0.12)",
+                                borderColor: "#306C92",
+                                color: "#306C92",
+                            },
+
+                            '&:active': {
+                                backgroundColor: "rgba(32,85,119,0.14)",
+                                borderColor: "#114363",
+                                color: "#114363",
+                            },
+
+                            '&.Mui-disabled': {
+                                backgroundColor: "rgba(32,85,119,0.06)",
+                                borderColor: "rgba(32,85,119,0.10)",
+                                color: "rgba(32,85,119,0.40)",
+                            },
                         },
                     },
                 },

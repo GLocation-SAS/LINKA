@@ -1,25 +1,41 @@
 import { AppBar, Toolbar, Button, Box } from "@mui/material";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import GroupIcon from "@mui/icons-material/Group";
+import HistoryIcon from "@mui/icons-material/History";   // ⬅️ Import icono
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { signOut } from "firebase/auth";
-import { auth } from "../Config/firebase";
 import logo from "../assets/Linka/Logos/Logo Horizontal/PNG/Logo Horizontal Alternativo.png";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "../Context/AuthContext";
+import { useUser } from "../Context/UserContext";
+import FeedbackModal from "./FeedbackModal";
+import React from "react";
+import GroupsIcon from "@mui/icons-material/Groups";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { rol } = useAuth();
+    const { logout } = useUser();
 
-    const handleLogout = async () => {
-        await signOut(auth);
-        navigate("/");
+    const [showConfirmLogout, setShowConfirmLogout] = React.useState(false);
+    const [loadingLogout, setLoadingLogout] = React.useState(false);
+
+    const openConfirmLogout = () => setShowConfirmLogout(true);
+    const closeConfirmLogout = () => {
+        if (!loadingLogout) setShowConfirmLogout(false);
     };
 
-    // 🔹 Función para estilos de tabs de navegación
-    // 🔹 Función para estilos de tabs de navegación
+    const handleConfirmLogout = async () => {
+        setLoadingLogout(true);
+        try {
+            await logout();
+            setShowConfirmLogout(false);
+            navigate("/");
+        } finally {
+            setLoadingLogout(false);
+        }
+    };
+
     const navButtonStyle = (path: string) => {
         const isActive = location.pathname === path;
 
@@ -32,7 +48,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             "& .MuiSvgIcon-root": {
                 color: isActive ? "secondary.main" : "inherit",
             },
-            // 🔸 Subrayado si está activo
             "&:after": isActive
                 ? {
                     content: '""',
@@ -44,7 +59,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     backgroundColor: "secondary.main",
                 }
                 : {},
-            // 🔸 Hover solo si NO está activo
             "&:hover": !isActive
                 ? {
                     backgroundColor: "secondary.main",
@@ -56,7 +70,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 : {},
         };
     };
-
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
@@ -86,18 +99,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         >
                             Campañas
                         </Button>
+                        <Button
+                            component={Link}
+                            to="/Audiencia"
+                            color="inherit"
+                            endIcon={<GroupsIcon />}
+                            sx={navButtonStyle("/Audiencia")}
+                        >
+                            Audiencia
+                        </Button>
 
                         {/* Solo Admin: Gestión de Usuarios */}
                         {rol === "admin" && (
-                            <Button
-                                component={Link}
-                                to="/GestionUsuarios"
-                                color="inherit"
-                                endIcon={<GroupIcon />}
-                                sx={navButtonStyle("/GestionUsuarios")}
-                            >
-                                Gestión de Usuarios
-                            </Button>
+                            <>
+                                <Button
+                                    component={Link}
+                                    to="/GestionUsuarios"
+                                    color="inherit"
+                                    endIcon={<GroupIcon />}
+                                    sx={navButtonStyle("/GestionUsuarios")}
+                                >
+                                    Gestión de Usuarios
+                                </Button>
+
+                                {/* 🔹 Nuevo: Historial Administrador */}
+                                <Button
+                                    component={Link}
+                                    to="/HistorialAdmin"
+                                    color="inherit"
+                                    endIcon={<HistoryIcon />}
+                                    sx={navButtonStyle("/HistorialAdmin")}
+                                >
+                                    Historial Admin
+                                </Button>
+                            </>
                         )}
 
                         {/* Logout */}
@@ -107,7 +142,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             size="small"
                             endIcon={<LogoutIcon />}
                             sx={navButtonStyle("")}
-                            onClick={handleLogout}
+                            onClick={openConfirmLogout}
+                            disabled={loadingLogout}
                         >
                             Cerrar sesión
                         </Button>
@@ -119,6 +155,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Box sx={{ flex: 1, bgcolor: "background.default", p: 5 }}>
                 {children}
             </Box>
+
+            <FeedbackModal
+                open={showConfirmLogout}
+                type="confirm"
+                title="¿Cerrar sesión?"
+                description="Se cerrará tu sesión actual. Tendrás que iniciar sesión nuevamente para continuar."
+                confirmLabel="Cerrar sesión"
+                cancelLabel="Cancelar"
+                onConfirm={handleConfirmLogout}
+                onClose={closeConfirmLogout}
+                loadingConfirm={loadingLogout}
+            />
         </Box>
     );
 }

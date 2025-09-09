@@ -6,13 +6,14 @@ import {
   Button,
   Typography,
   Stack,
-  Link,
+
 } from "@mui/material";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../../../Config/firebase";
 import { useNavigate } from "react-router-dom";
 import FeedbackModal from "../../../components/FeedbackModal";
 import backgroundImage from "../../../assets/images/ImagenLogin.png";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack"; // 👈 nuevo import
 
 function mapResetError(err: any): string {
   const raw =
@@ -104,18 +105,31 @@ export default function ForgotPasswordPage() {
           boxShadow: 3,
         }}
       >
-        <Typography variant="h5" textAlign="center" fontWeight={700} mb={3}>
+        <Typography variant="h5" textAlign="center" fontWeight={700} mb={1}>
           Recuperar Contraseña
         </Typography>
 
         <Stack spacing={3}>
+          <Typography fontSize={14} fontWeight={600} sx={{ marginTop: "5% !important" }}>
+            Correo Electrónico
+          </Typography>
           <TextField
             fullWidth
             label="Correo Electrónico"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{
+              shrink: false, // evita el floating label
+              sx: {
+                "&.Mui-focused": {
+                  display: "none", // 👈 oculta cuando está en focus
+                },
+              },
+            }}
           />
+
 
           <Button
             variant="contained"
@@ -125,14 +139,16 @@ export default function ForgotPasswordPage() {
             Enviar correo de recuperación
           </Button>
 
-          <Link
-            component="button"
-            variant="body2"
+          <Button
+            variant="outlined"
+            color="info"  
+            fullWidth
+            startIcon={<ArrowBackIcon />}
             onClick={() => navigate("/")}
-            sx={{ textAlign: "center", mt: 1 }}
+            sx={{ marginTop: "5% !important" }}
           >
-            ← Volver al inicio de sesión
-          </Link>
+            Volver al inicio de sesión
+          </Button>
 
           {inlineMessage && (
             <Typography textAlign="center" fontSize={14} mt={2} color="error">

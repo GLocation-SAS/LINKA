@@ -14,6 +14,7 @@ import { AccountCircle, Key, Google } from "@mui/icons-material";
 import { loginWithEmail, loginWithGoogle, mapAuthErrorToMessage } from "../services/authService";
 import logo from "../../../assets/Linka/Logos/Logo Horizontal/PNG/Logo Horizontal.png";
 import FeedbackModal from "../../../components/FeedbackModal";
+import { useUser } from "../../../Context/UserContext";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -21,6 +22,7 @@ export default function LoginForm() {
   const [message, setMessage] = useState("");
 
   const navegate = useNavigate();
+  const { setUid } = useUser();   // ⬅️ NUEVO
 
   const [showConfirmEmail, setShowConfirmEmail] = useState(false);
   const [showConfirmGoogle, setShowConfirmGoogle] = useState(false);
@@ -53,9 +55,11 @@ export default function LoginForm() {
   const handleConfirmEmailLogin = async () => {
     setLoadingConfirm(true);
     try {
-      await loginWithEmail(email, password);
+      const user = await loginWithEmail(email, password);
+      setUid(user.uid);
       setShowConfirmEmail(false);
       setShowSuccess("¡Inicio de sesión exitoso!");
+      setMessage("Has ingresado con tu correo electrónico.");
     } catch (error: any) {
       console.error("Error al iniciar sesión:", error);
       setShowConfirmEmail(false);
@@ -75,9 +79,11 @@ export default function LoginForm() {
   const handleConfirmGoogleLogin = async () => {
     setLoadingConfirm(true);
     try {
-      await loginWithGoogle();
+      const user = await loginWithGoogle();
+      setUid(user.uid);
       setShowConfirmGoogle(false);
       setShowSuccess("¡Inicio de sesión con Google exitoso!");
+      setMessage("Has ingresado con tu cuenta de Google.");
     } catch (error: any) {
       console.error("Error con Google Login:", error);
       setShowConfirmGoogle(false);
@@ -86,9 +92,11 @@ export default function LoginForm() {
       setLoadingConfirm(false);
     }
   };
+
   // Cerrar éxito → navegar
   const handleSuccessClose = () => {
     setShowSuccess(null);
+    setMessage("");
     navegate("/Campanas");
   };
 
@@ -123,12 +131,21 @@ export default function LoginForm() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Ingresa tu Correo Electrónico"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <AccountCircle color="secondary" />
                 </InputAdornment>
               ),
+            }}
+            sx={{
+              "& .MuiInputBase-input::placeholder": {
+                opacity: 1, // visible por defecto
+              },
+              "& .MuiInputBase-input:focus::placeholder": {
+                opacity: 0, // desaparece al focus
+              },
             }}
           />
         </Box>
@@ -143,6 +160,7 @@ export default function LoginForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Ingresa tu Contraseña"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -150,8 +168,17 @@ export default function LoginForm() {
                 </InputAdornment>
               ),
             }}
+            sx={{
+              "& .MuiInputBase-input::placeholder": {
+                opacity: 1,
+              },
+              "& .MuiInputBase-input:focus::placeholder": {
+                opacity: 0,
+              },
+            }}
           />
         </Box>
+
 
         {/* Mensaje de error */}
         {message && (
@@ -172,14 +199,14 @@ export default function LoginForm() {
           size="large"
           onClick={handleLogin}
         >
-          INICIAR SESIÓN
+          Iniciar sesión
         </Button>
 
         {/* Botón Google */}
         <Button
           fullWidth
           variant="outlined"
-          size="large"
+          color="info"  
           startIcon={<Google />}
           onClick={handleGoogleLogin}
         >
@@ -201,7 +228,8 @@ export default function LoginForm() {
         title="¿Deseas iniciar sesión?"
         description={
           <>
-            <strong>Correo:</strong> {email}
+            Se usará el siguiente correo para iniciar sesión: <br />
+            <strong>{email}</strong>
           </>
         }
         confirmLabel="Iniciar sesión"
@@ -210,6 +238,7 @@ export default function LoginForm() {
         onClose={() => setShowConfirmEmail(false)}
         loadingConfirm={loadingConfirm}
       />
+
 
       {/* ===== Modal Confirmación Google ===== */}
       <FeedbackModal
@@ -229,6 +258,7 @@ export default function LoginForm() {
         open={Boolean(showSuccess)}
         type="success"
         title={showSuccess || "Éxito"}
+        description={message || undefined}   // 👈 descripción dinámica
         confirmLabel="Continuar"
         onClose={handleSuccessClose}
       />
