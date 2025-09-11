@@ -27,8 +27,15 @@ export const listarHistorial = async (params: {
   fechaFin?: string;
   limit?: number;
   page?: number;
+  order?: "asc";
 }) => {
-  const res = await api.get("/historial/general", { params });
+  // 👇 merge con order por defecto
+  const queryParams = {
+    order: "desc",
+    ...params,
+  };
+
+  const res = await api.get("/historial/general", { params: queryParams });
 
   // 🔧 Normalización
   const normalized: HistorialResponse = {
@@ -37,13 +44,17 @@ export const listarHistorial = async (params: {
       accion: i.accion,
       // si viene { value: "..." } lo convertimos a string
       fecha: typeof i.fecha === "object" && i.fecha?.value ? i.fecha.value : i.fecha,
-      // mantener como viene (minúsculas) o normalizar si lo necesitas
       tipo: i.tipo,
     })),
     pagination: res.data?.pagination || {
-      page: 1, limit: 10, totalCount: 0, totalPages: 1, hasNextPage: false,
+      page: 1,
+      limit: 10,
+      totalCount: 0,
+      totalPages: 1,
+      hasNextPage: false,
     },
   };
 
   return normalized;
 };
+

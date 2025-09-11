@@ -9,10 +9,11 @@ import {
   useTheme,
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import InfoIcon from "@mui/icons-material/Info";
-import HelpIcon from "@mui/icons-material/Help"; // 👈 en vez de HelpOutlineIcon
+import HelpIcon from "@mui/icons-material/Help";
+import CancelIcon from "@mui/icons-material/Cancel";
 import type { ReactNode } from "react";
+import loadingGif from "../assets/Linka/GIF/GifLinka.gif"; // 👈 usa el GIF
 
 type ModalType = "success" | "error" | "info" | "confirm";
 
@@ -21,11 +22,13 @@ export interface FeedbackModalProps {
   type: ModalType;
   title?: string;
   description?: ReactNode;
-  confirmLabel?: string;   // Texto botón confirmar
-  cancelLabel?: string;    // Texto botón cancelar (solo confirm)
+  confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm?: () => void;
   onClose: () => void;
-  loadingConfirm?: boolean; // Deshabilita/ muestra loading en confirmar
+  loadingConfirm?: boolean;
+  loadingTitle?: string;
+  loadingDescription?: ReactNode;
 }
 
 export default function FeedbackModal({
@@ -38,10 +41,11 @@ export default function FeedbackModal({
   onConfirm,
   onClose,
   loadingConfirm = false,
+  loadingTitle,
+  loadingDescription,
 }: FeedbackModalProps) {
   const theme = useTheme();
 
-  // Ícono + color por tipo
   const map = {
     success: {
       icon: <CheckCircleIcon sx={{ fontSize: 100, color: theme.palette.success.main }} />,
@@ -51,7 +55,7 @@ export default function FeedbackModal({
       showCancel: false,
     },
     error: {
-      icon: <HighlightOffIcon sx={{ fontSize: 100, color: theme.palette.error.main }} />,
+      icon: <CancelIcon sx={{ fontSize: 100, color: theme.palette.error.main }} />,
       color: theme.palette.error.main,
       defaultTitle: "Ocurrió un error",
       defaultConfirm: "Aceptar",
@@ -73,10 +77,44 @@ export default function FeedbackModal({
     },
   }[type];
 
+  const effectiveTitle = loadingConfirm
+    ? (loadingTitle ?? "Cargando...")
+    : (title ?? map.defaultTitle);
+
+  const effectiveDescription = loadingConfirm
+    ? (loadingDescription ?? "Danos un momento estamos procesando tus datos.")
+    : description;
+
+  // 👇 Loader usando GIF (sin SVG/CSS)
+  const LoaderRing = (
+    <Box
+      role="progressbar"
+      aria-label="Cargando"
+      sx={{
+        width: 140,
+        height: 140,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Box
+        component="img"
+        src={loadingGif}
+        alt="Cargando"
+        sx={{ width: 120, height: 120, objectFit: "contain" }}
+      />
+    </Box>
+  );
+
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      disableEscapeKeyDown={loadingConfirm}
+      onClose={(_event, reason) => {
+        if (loadingConfirm && (reason === "backdropClick" || reason === "escapeKeyDown")) return;
+        onClose();
+      }}
       maxWidth="sm"
       fullWidth
       PaperProps={{
@@ -84,48 +122,54 @@ export default function FeedbackModal({
           borderRadius: 4,
           p: { xs: 2, md: 3 },
           textAlign: "center",
-          width:500
+          width: 500,
+          bgcolor: "#ffffffff",
         },
       }}
     >
       <Box display="flex" justifyContent="center" mt={1} mb={1}>
-        {map.icon}
+        {loadingConfirm ? LoaderRing : map.icon}
       </Box>
 
-      <DialogTitle sx={{ textAlign: "center", fontWeight: 700, fontSize: 35, width: '100%' }}>
-        {title || map.defaultTitle}
+      <DialogTitle sx={{ textAlign: "center", fontWeight: 800, fontSize: 32, width: "100%" }}>
+        {effectiveTitle}
       </DialogTitle>
 
-      {description && (
+      {effectiveDescription && (
         <DialogContent>
           <Typography variant="subtitle1" color="text.secondary">
-            {description}
+            {effectiveDescription}
           </Typography>
         </DialogContent>
       )}
 
-      <DialogActions sx={{ justifyContent: "center", gap: 2, pb: 3 }}>
-        {map.showCancel && (
+      {!loadingConfirm && (
+        <DialogActions sx={{ justifyContent: "center", gap: 2, pb: 3 }}>
+          {map.showCancel && (
+            <Button onClick={onClose} variant="contained" color="neutral" sx={{ minWidth: 140 }}>
+              {cancelLabel}
+            </Button>
+          )}
+
           <Button
-            onClick={onClose}
+            onClick={type === "confirm" ? onConfirm : onClose}
             variant="contained"
-            color="neutral" 
+            color={
+              type === "error"
+                ? "error"
+                : type === "success"
+                  ? "success"
+                  : type === "info"
+                    ? "info"
+                    : "secondary"
+            }
             sx={{ minWidth: 140 }}
           >
-            {cancelLabel}
+            {confirmLabel || map.defaultConfirm}
           </Button>
-        )}
 
-        <Button
-          onClick={type === "confirm" ? onConfirm : onClose}
-          variant="contained"
-          color={type === "error" ? "error" : type === "success" ? "success" : "secondary"}
-          sx={{ minWidth: 140 }}
-          disabled={loadingConfirm}
-        >
-          {confirmLabel || map.defaultConfirm}
-        </Button>
-      </DialogActions>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }

@@ -216,7 +216,7 @@ export default function RegisterPage() {
         open={showSuccess}
         type="success"
         title="Registro exitoso"
-        description="Tu cuenta fue creada correctamente. Ahora puedes iniciar sesión."
+        description="Tu cuenta fue creada correctamente. Ahora puedes continuar a iniciar sesión con tu usuario."
         confirmLabel="Aceptar"
         onClose={handleSuccessClose}
       />

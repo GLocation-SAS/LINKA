@@ -41,11 +41,11 @@ export default function LoginForm() {
     setShowError(null);
 
     if (!email.trim() || !password.trim()) {
-      setMessage("❌ Por favor completa todos los campos.");
+      setMessage("Por favor completa todos los campos.");
       return;
     }
     if (!isValidEmail(email)) {
-      setMessage("❌ Ingresa un correo electrónico válido.");
+      setMessage(" Ingresa un correo electrónico válido.");
       return;
     }
 

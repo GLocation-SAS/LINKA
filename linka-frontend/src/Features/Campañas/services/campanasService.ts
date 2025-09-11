@@ -8,6 +8,7 @@ export const listarCampanas = async (params: {
   fechaFin?: string;
   limit?: number;
   page?: number;
+  idUsuario?: string; 
 }): Promise<CampanasResponse> => {
   const res = await api.get("/campanas/listar", { params });
   return res.data as CampanasResponse;

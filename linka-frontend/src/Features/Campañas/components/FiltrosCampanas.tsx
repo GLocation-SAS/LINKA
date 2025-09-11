@@ -119,6 +119,7 @@ export default function FiltrosCampanas({
             color="info"
             onClick={onClear}
             disabled={searching}
+            sx={{ fontSize:" 12px !important" }}
           >
             Limpiar
           </Button>

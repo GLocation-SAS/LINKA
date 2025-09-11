@@ -9,6 +9,8 @@ import {
   Button,
   MenuItem,
   Stack,
+  Typography,
+  Box,
 } from "@mui/material";
 import { registerWithEmail } from "../../Login/services/authService";
 import FeedbackModal from "../../../components/FeedbackModal"; // 👈 importa tu modal
@@ -79,7 +81,7 @@ export default function CrearUsuarioDialog({ open, onClose, onCreated }: Props) 
       setShowConfirm(false);
       setShowError(
         err?.response?.data?.message ||
-          "❌ No se pudo crear el usuario. Puede que ya exista."
+        "❌ No se pudo crear el usuario. Puede que ya exista."
       );
     } finally {
       setLoading(false);
@@ -99,46 +101,82 @@ export default function CrearUsuarioDialog({ open, onClose, onCreated }: Props) 
       {/* Dialog principal de formulario */}
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
         <DialogTitle>Crear Usuario</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Stack spacing={2} mt={1}>
-            <TextField
-              label="Nombre completo"
-              fullWidth
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              required
-            />
-            <TextField
-              label="Correo electrónico"
-              type="email"
-              fullWidth
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <TextField
-              label="Contraseña"
-              type="password"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <TextField
-              select
-              label="Rol"
-              value={rol}
-              onChange={(e) => setRol(e.target.value)}
-              fullWidth
-              required
-            >
-              <MenuItem value="gestor">Gestor</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
-            </TextField>
+            <Box>
+              <Typography fontSize={14} fontWeight={600} mb={1}>
+                Nombre completo
+              </Typography>
+              <TextField
+                fullWidth
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Ingresa tu nombre completo"
+                sx={{
+                  "& .MuiInputBase-input::placeholder": { opacity: 1 },
+                  "& .MuiInputBase-input:focus::placeholder": { opacity: 0 },
+                }}
+              />
+            </Box>
+
+            <Box>
+              <Typography fontSize={14} fontWeight={600} mb={1}>
+                Correo electrónico
+              </Typography>
+              <TextField
+                fullWidth
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Ingresa tu correo electrónico"
+                sx={{
+                  "& .MuiInputBase-input::placeholder": { opacity: 1 },
+                  "& .MuiInputBase-input:focus::placeholder": { opacity: 0 },
+                }}
+              />
+            </Box>
+
+            <Box>
+              <Typography fontSize={14} fontWeight={600} mb={1}>
+                Contraseña
+              </Typography>
+              <TextField
+                fullWidth
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Ingresa tu contraseña"
+                sx={{
+                  "& .MuiInputBase-input::placeholder": { opacity: 1 },
+                  "& .MuiInputBase-input:focus::placeholder": { opacity: 0 },
+                }}
+              />
+            </Box>
+
+            <Box>
+              <Typography fontSize={14} fontWeight={600} mb={1}>
+                Rol
+              </Typography>
+              <TextField
+                select
+                fullWidth
+                value={rol}
+                onChange={(e) => setRol(e.target.value)}
+                placeholder="Selecciona un rol"
+                sx={{
+                  "& .MuiInputBase-input::placeholder": { opacity: 1 },
+                  "& .MuiInputBase-input:focus::placeholder": { opacity: 0 },
+                }}
+              >
+                <MenuItem value="gestor">Gestor</MenuItem>
+                <MenuItem value="admin">Admin</MenuItem>
+              </TextField>
+            </Box>
+
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button variant="outlined" onClick={onClose}>
+          <Button variant="outlined" color="info" onClick={onClose}>
             Cancelar
           </Button>
           <Button

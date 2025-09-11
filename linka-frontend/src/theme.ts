@@ -238,6 +238,43 @@ const theme = createTheme({
                 },
             },
         },
+        MuiAutocomplete: {
+            styleOverrides: {
+                root: {
+                    "& .MuiOutlinedInput-root": {
+                        borderRadius: 8,
+                        backgroundColor: "#F5F5F5",
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#F38933",
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#F38933",
+                            borderWidth: 2,
+                        },
+                        "&.Mui-disabled": {
+                            backgroundColor: "#E0E0E0",
+                            color: "#727272",
+                        },
+                    },
+                },
+                option: {
+                    fontFamily: "Nunito, sans-serif",
+                    fontSize: "14px",
+                    "&[aria-selected='true']": {
+                        backgroundColor: "#F5F5F5 !important",
+                    },
+                    "&:hover": {
+                        backgroundColor: "#F99F56 !important",
+                        color: "#FFFFFF",
+                    },
+                    "&.Mui-focused": {
+                        backgroundColor: "#F38933 !important",
+                        color: "#FFFFFF",
+                    },
+                },
+            },
+        },
+
     },
 });
 

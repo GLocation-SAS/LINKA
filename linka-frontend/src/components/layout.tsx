@@ -1,26 +1,52 @@
-import { AppBar, Toolbar, Button, Box } from "@mui/material";
+// src/components/layout.tsx
+import {
+    AppBar,
+    Toolbar,
+    Button,
+    Box,
+    Menu,
+    MenuItem,
+    Avatar,
+    Typography,
+    Divider,
+    ListItemIcon,
+    Chip,
+} from "@mui/material";
+import Logout from "@mui/icons-material/Logout";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import GroupIcon from "@mui/icons-material/Group";
-import HistoryIcon from "@mui/icons-material/History";   // ⬅️ Import icono
+import HistoryIcon from "@mui/icons-material/History";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/Linka/Logos/Logo Horizontal/PNG/Logo Horizontal Alternativo.png";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { useAuth } from "../Context/AuthContext";
 import { useUser } from "../Context/UserContext";
 import FeedbackModal from "./FeedbackModal";
 import React from "react";
 import GroupsIcon from "@mui/icons-material/Groups";
+import SmsIcon from "@mui/icons-material/Sms";
+import MarkChatReadIcon from "@mui/icons-material/MarkChatRead";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     const navigate = useNavigate();
     const location = useLocation();
-    const { rol } = useAuth();
-    const { logout } = useUser();
+    const { rol, displayName, email, logout } = useUser();
 
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [showConfirmLogout, setShowConfirmLogout] = React.useState(false);
     const [loadingLogout, setLoadingLogout] = React.useState(false);
 
-    const openConfirmLogout = () => setShowConfirmLogout(true);
+    const open = Boolean(anchorEl);
+
+    const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const openConfirmLogout = () => {
+        setShowConfirmLogout(true);
+        handleMenuClose();
+    };
     const closeConfirmLogout = () => {
         if (!loadingLogout) setShowConfirmLogout(false);
     };
@@ -29,16 +55,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setLoadingLogout(true);
         try {
             await logout();
-            setShowConfirmLogout(false);
             navigate("/");
         } finally {
             setLoadingLogout(false);
+            setShowConfirmLogout(false);
         }
     };
 
     const navButtonStyle = (path: string) => {
         const isActive = location.pathname === path;
-
         return {
             fontSize: "0.85rem",
             px: 1.5,
@@ -63,9 +88,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 ? {
                     backgroundColor: "secondary.main",
                     color: "white",
-                    "& .MuiSvgIcon-root": {
-                        color: "white",
-                    },
+                    "& .MuiSvgIcon-root": { color: "white" },
                 }
                 : {},
         };
@@ -74,12 +97,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
             {/* 🔹 Topbar */}
-            <AppBar position="static" color="primary" sx={{ px: 2, height: 56 }}>
+            <AppBar position="static" color="primary" sx={{ px: 2, height: 70 }}>
                 <Toolbar
                     sx={{
                         display: "flex",
                         justifyContent: "space-between",
-                        minHeight: "56px !important",
+                        minHeight: "70px !important",
                     }}
                 >
                     {/* Izquierda: Logo */}
@@ -87,9 +110,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <img src={logo} alt="Linka" style={{ height: 32 }} />
                     </Box>
 
-                    {/* Derecha: Opciones + Logout */}
-                    <Box display="flex" alignItems="center" gap={1}>
-                        {/* Campañas */}
+                    {/* Derecha: Opciones + Perfil */}
+                    <Box display="flex" alignItems="center" gap={2}>
                         <Button
                             component={Link}
                             to="/Campanas"
@@ -108,8 +130,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         >
                             Audiencia
                         </Button>
+                        <Button
+                            component={Link}
+                            to="/EnvioMensajes"
+                            color="inherit"
+                            endIcon={<SmsIcon />}
+                            sx={navButtonStyle("/EnvioMensajes")}
+                        >
+                            Envió Masivos
+                        </Button>
+                        <Button
+                            component={Link}
+                            to="/HistorialMensajes"
+                            color="inherit"
+                            endIcon={<MarkChatReadIcon />}
+                            sx={navButtonStyle("/HistorialMensajes")}
+                        >
+                            Historial Mensajes
+                        </Button>
 
-                        {/* Solo Admin: Gestión de Usuarios */}
                         {rol === "admin" && (
                             <>
                                 <Button
@@ -121,8 +160,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                 >
                                     Gestión de Usuarios
                                 </Button>
-
-                                {/* 🔹 Nuevo: Historial Administrador */}
                                 <Button
                                     component={Link}
                                     to="/HistorialAdmin"
@@ -135,18 +172,60 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             </>
                         )}
 
-                        {/* Logout */}
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            size="small"
-                            endIcon={<LogoutIcon />}
-                            sx={navButtonStyle("")}
-                            onClick={openConfirmLogout}
-                            disabled={loadingLogout}
+                        {/* 🔹 Perfil con menú desplegable */}
+                        <Avatar
+                            onClick={handleMenuOpen}
+                            sx={{
+                                bgcolor: "secondary.main",
+                                cursor: "pointer",
+                                width: 36,
+                                height: 36,
+                                fontSize: 16,
+                                fontWeight: 600,
+                            }}
                         >
-                            Cerrar sesión
-                        </Button>
+                            {displayName?.[0] ?? "U"}
+                        </Avatar>
+
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleMenuClose}
+                            PaperProps={{
+                                sx: {
+                                    mt: 1,
+                                    borderRadius: 2,
+                                    boxShadow: 4,
+                                    p: 1,
+                                    minWidth: 250,
+                                },
+                            }}
+                            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                            transformOrigin={{ vertical: "top", horizontal: "right" }}
+                        >
+                            <Box sx={{ px: 2, py: 1 }}>
+                                <Typography variant="subtitle1" fontWeight={700}>{displayName}</Typography>
+                                <Typography variant="body1" color="text.secondary">
+                                    {email}
+                                </Typography>
+                                {rol && (
+                                    <Chip
+                                        label={rol === "admin" ? "Administrador" : "Gestor"}
+                                        color={rol === "admin" ? "secondary" : "info"}
+                                        size="small"
+                                        sx={{ mt: 1, fontWeight: 600, width:"100%" }}
+                                    />
+                                )}
+                            </Box>
+                            <Divider />
+
+                            <MenuItem onClick={openConfirmLogout}>
+                                <ListItemIcon>
+                                    <Logout fontSize="small" />
+                                </ListItemIcon>
+                                Cerrar sesión
+                            </MenuItem>
+                        </Menu>
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -156,6 +235,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {children}
             </Box>
 
+            {/* 🔹 Modal confirmación */}
             <FeedbackModal
                 open={showConfirmLogout}
                 type="confirm"

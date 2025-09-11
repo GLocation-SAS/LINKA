@@ -6,6 +6,19 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import type { HistorialTipo } from "../services/historialService";
 
+/** Helpers (puedes importarlos desde utils si ya los tienes) */
+export function startOfDayISO(d: Date) {
+  const dt = new Date(d);
+  dt.setHours(0, 0, 0, 0);
+  return dt.toISOString();
+}
+
+export function endOfDayISO(d: Date) {
+  const dt = new Date(d);
+  dt.setHours(23, 59, 59, 999);
+  return dt.toISOString();
+}
+
 type Props = {
   usuario: string;
   setUsuario: (v: string) => void;
@@ -65,8 +78,22 @@ export default function FiltrosHistorial({
     }
   };
 
+  // 🔧 Normaliza SIEMPRE: start -> 00:00:00.000, end -> 23:59:59.999
   const handleDateChange = (range: [Date | null, Date | null]) => {
-    setDateRange(range);
+    const [start, end] = range;
+
+    // Si no hay fechas, solo setea y sal
+    if (!start && !end) {
+      setDateRange([null, null]);
+      triggerSearchNextTick();
+      return;
+    }
+
+    // Normalización a ISO y se vuelve a Date (para mantener el tipo que espera el DatePicker)
+    const normalizedStart = start ? new Date(startOfDayISO(start)) : null;
+    const normalizedEnd = end ? new Date(endOfDayISO(end)) : null;
+
+    setDateRange([normalizedStart, normalizedEnd]);
     triggerSearchNextTick();
   };
 
@@ -131,10 +158,11 @@ export default function FiltrosHistorial({
 
         {/* Solo botón limpiar */}
         <Button
-          color="inherit"
+          color="info"
           variant="outlined"
           onClick={onClear}
           disabled={searching}
+          sx={{ fontSize:" 12px !important" }}
         >
           Limpiar
         </Button>

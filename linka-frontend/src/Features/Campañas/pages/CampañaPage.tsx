@@ -13,9 +13,8 @@ import PaginationTable from "../../../components/PaginationTable";
 import type { Campana } from "../Types/types";
 import { startOfDayISO, endOfDayISO } from "../../../utils/date";
 
-
 export default function CampanasPage() {
-  const { uid } = useUser();
+  const { uid, rol } = useUser();
 
   // Listado & paginación
   const [rows, setRows] = useState<Campana[]>([]);
@@ -26,28 +25,39 @@ export default function CampanasPage() {
 
   // Filtros
   const [nombre, setNombre] = useState("");
-  const [[startDate, endDate], setDateRange] = useState<[Date | null, Date | null]>([
-    null,
-    null,
-  ]);
+  const [[startDate, endDate], setDateRange] = useState<[Date | null, Date | null]>([null, null]);
 
-  // Crear / Editar / Eliminar
+  // Crear / Editar / Eliminar (dialogs)
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [currentEdit, setCurrentEdit] = useState<Campana | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Campana | null>(null);
 
-  const [busyAction, setBusyAction] = useState(false);
+  // Confirmaciones (FeedbackModal) para crear/editar
+  const [askCreate, setAskCreate] = useState<string | null>(null);
+  const [askUpdate, setAskUpdate] = useState<string | null>(null);
+
+  // Loaders por acción (para FeedbackModal.loadingConfirm)
+  const [loadingCreate, setLoadingCreate] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+
+  // Éxito / Error
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  // Para encadenar -> abrir modal de éxito tras cerrar confirmación + terminar loader
+  const [pendingSuccess, setPendingSuccess] = useState<null | "create" | "update" | "delete">(null);
 
   const params = useMemo(() => {
     const p: any = { page, limit };
     if (nombre.trim()) p.nombre = nombre.trim();
     if (startDate) p.fechaInicio = startOfDayISO(startDate);
     if (endDate) p.fechaFin = endOfDayISO(endDate);
+    if (rol !== "admin" && uid) p.idUsuario = uid; // 👈 solo si no es admin
     return p;
-  }, [page, limit, nombre, startDate, endDate]);
+  }, [page, limit, nombre, startDate, endDate, uid, rol]);
+
 
   const fetchData = async (customParams?: any) => {
     setLoading(true);
@@ -66,10 +76,9 @@ export default function CampanasPage() {
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit]); // Los filtros se aplican manualmente con botón
+  }, [page, limit, uid]); // Los filtros se aplican manualmente con botón
 
   const applyFilters = async () => {
-    // Forzar page 1 en la aplicación de filtros y evitar doble fetch
     const firstPageParams = { ...params, page: 1 };
     setPage(1);
     await fetchData(firstPageParams);
@@ -82,59 +91,73 @@ export default function CampanasPage() {
     await fetchData({ page: 1, limit });
   };
 
-  // Crear
-  const handleCreate = async (nombre: string) => {
+  // ---------- Crear ----------
+  // Desde el diálogo: en vez de crear directo, abrimos confirmación
+  const handleCreateAsk = async (nombreNuevo: string) => {
     if (!uid) {
       setModalError("No se pudo identificar al usuario. Inicia sesión nuevamente.");
       return;
     }
-    if (!nombre) return;
-    setBusyAction(true);
+    if (!nombreNuevo) return;
+    setAskCreate(nombreNuevo);
+  };
+
+  const doCreate = async () => {
+    if (!askCreate || !uid) return;
+    setLoadingCreate(true);
     try {
-      await crearCampana({ nombre, idUsuario: uid });
-      setOpenCreate(false);
-      setModalSuccess("¡Campaña creada correctamente!");
-      await fetchData({ ...params, page: 1 }); // mostrar desde la primera página
+      await crearCampana({ nombre: askCreate, idUsuario: uid });
+      setPendingSuccess("create");
+      // refrescamos listado (desde page 1)
+      await fetchData({ ...params, page: 1 });
       setPage(1);
+      setOpenCreate(false);
     } catch (e: any) {
       console.error(e);
       setModalError("No se pudo crear la campaña.");
     } finally {
-      setBusyAction(false);
+      setLoadingCreate(false);
+      setAskCreate(null); // cierra modal confirmación
     }
   };
 
-  // Editar
+  // ---------- Editar ----------
   const handleOpenEdit = (row: Campana) => {
     setCurrentEdit(row);
     setOpenEdit(true);
   };
-  const handleEdit = async (nombre: string) => {
-    if (!currentEdit?.idCampana || !nombre) return;
-    setBusyAction(true);
+
+  // Desde el diálogo de editar, pedimos confirmación con el nuevo nombre
+  const handleEditAsk = async (nombreNuevo: string) => {
+    if (!currentEdit?.idCampana || !nombreNuevo) return;
+    setAskUpdate(nombreNuevo);
+  };
+
+  const doUpdate = async () => {
+    if (!currentEdit?.idCampana || !askUpdate) return;
+    setLoadingUpdate(true);
     try {
-      await actualizarCampana(currentEdit.idCampana, { nombre });
+      await actualizarCampana(currentEdit.idCampana, { nombre: askUpdate });
+      setPendingSuccess("update");
       setOpenEdit(false);
       setCurrentEdit(null);
-      setModalSuccess("¡Campaña actualizada!");
       await fetchData();
     } catch (e: any) {
       console.error(e);
       setModalError("No se pudo actualizar la campaña.");
     } finally {
-      setBusyAction(false);
+      setLoadingUpdate(false);
+      setAskUpdate(null); // cierra confirmación
     }
   };
 
-  // Eliminar
+  // ---------- Eliminar ----------
   const handleDelete = async () => {
     if (!confirmDelete?.idCampana) return;
-    setBusyAction(true);
+    setLoadingDelete(true);
     try {
       await eliminarCampana(confirmDelete.idCampana);
-      setConfirmDelete(null);
-      setModalSuccess("Campaña eliminada.");
-      // Si la última del page se borró, intenta reequilibrar
+      // Si la última del page se borró, reequilibrar
       if (rows.length === 1 && page > 1) {
         const newPage = page - 1;
         setPage(newPage);
@@ -142,21 +165,45 @@ export default function CampanasPage() {
       } else {
         await fetchData();
       }
+      setPendingSuccess("delete");
+      setConfirmDelete(null); // cierra confirmación
     } catch (e: any) {
       console.error(e);
       setModalError("No se pudo eliminar la campaña.");
     } finally {
-      setBusyAction(false);
+      setLoadingDelete(false);
     }
   };
+
+  // ---------- Encadenado: abrir éxito tras cerrar confirmación + terminar loader ----------
+  useEffect(() => {
+    if (pendingSuccess === "create" && !loadingCreate && !askCreate) {
+      const t = setTimeout(() => {
+        setModalSuccess("¡Campaña creada correctamente!");
+        setPendingSuccess(null);
+      }, 200);
+      return () => clearTimeout(t);
+    }
+    if (pendingSuccess === "update" && !loadingUpdate && !askUpdate) {
+      const t = setTimeout(() => {
+        setModalSuccess("¡Campaña actualizada!");
+        setPendingSuccess(null);
+      }, 200);
+      return () => clearTimeout(t);
+    }
+    if (pendingSuccess === "delete" && !loadingDelete && !confirmDelete) {
+      const t = setTimeout(() => {
+        setModalSuccess("Campaña eliminada.");
+        setPendingSuccess(null);
+      }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [pendingSuccess, loadingCreate, askCreate, loadingUpdate, askUpdate, loadingDelete, confirmDelete]);
 
   return (
     <Layout>
       <Stack spacing={2}>
-        <Stack
-          direction="column"
-          spacing={0.5}
-        >
+        <Stack direction="column" spacing={0.5}>
           <Typography variant="h4" fontWeight={700}>
             Campañas
           </Typography>
@@ -177,7 +224,6 @@ export default function CampanasPage() {
           onOpenCreate={() => setOpenCreate(true)}
           searching={loading}
         />
-
 
         {/* Tabla */}
         <TablaCampanas
@@ -204,9 +250,9 @@ export default function CampanasPage() {
       <CampanaDialog
         open={openCreate}
         mode="create"
-        loading={busyAction}
+        loading={loadingCreate} // opcional, deshabilita el form si quieres
         onClose={() => setOpenCreate(false)}
-        onSubmit={handleCreate}
+        onSubmit={handleCreateAsk} // 👈 ahora pide confirmación
       />
 
       {/* Dialog Editar */}
@@ -214,12 +260,54 @@ export default function CampanasPage() {
         open={openEdit}
         mode="edit"
         initialName={currentEdit?.nombre || ""}
-        loading={busyAction}
+        loading={loadingUpdate}
         onClose={() => {
           setOpenEdit(false);
           setCurrentEdit(null);
         }}
-        onSubmit={handleEdit}
+        onSubmit={handleEditAsk} // 👈 ahora pide confirmación
+      />
+
+      {/* Confirmar Crear */}
+      <FeedbackModal
+        open={Boolean(askCreate)}
+        type="confirm"
+        title="¿Crear campaña?"
+        description={
+          askCreate ? (
+            <Typography>
+              Se creará la campaña <strong>"{askCreate}"</strong>.
+            </Typography>
+          ) : undefined
+        }
+        confirmLabel="Crear"
+        cancelLabel="Cancelar"
+        onConfirm={doCreate}
+        onClose={() => { if (!loadingCreate) setAskCreate(null); }}
+        loadingConfirm={loadingCreate}
+        loadingTitle="Creando campaña..."
+        loadingDescription={askCreate ? `Registrando "${askCreate}".` : "Registrando campaña."}
+      />
+
+      {/* Confirmar Editar */}
+      <FeedbackModal
+        open={Boolean(askUpdate)}
+        type="confirm"
+        title="¿Actualizar campaña?"
+        description={
+          askUpdate ? (
+            <Typography>
+              Se actualizará el nombre a <strong>"{askUpdate}"</strong>.
+            </Typography>
+          ) : undefined
+        }
+        confirmLabel="Actualizar"
+        cancelLabel="Cancelar"
+        onConfirm={doUpdate}
+        onClose={() => { if (!loadingUpdate) setAskUpdate(null); }}
+        loadingConfirm={loadingUpdate}
+        loadingTitle="Actualizando campaña..."
+        loadingDescription={askUpdate ? `Guardando cambios: "${askUpdate}".` : "Guardando cambios."}
       />
 
       {/* Confirmar Eliminar */}
@@ -238,12 +326,16 @@ export default function CampanasPage() {
         confirmLabel="Eliminar"
         cancelLabel="Cancelar"
         onConfirm={handleDelete}
-        onClose={() => setConfirmDelete(null)}
-        loadingConfirm={busyAction}
+        onClose={() => { if (!loadingDelete) setConfirmDelete(null); }}
+        loadingConfirm={loadingDelete}
+        loadingTitle="Eliminando campaña..."
+        loadingDescription={
+          confirmDelete?.nombre
+            ? `Eliminando "${confirmDelete.nombre}".`
+            : "Eliminando campaña."
+        }
       />
 
-
-      {/* Éxito */}
       {/* Éxito */}
       <FeedbackModal
         open={Boolean(modalSuccess)}
@@ -260,7 +352,6 @@ export default function CampanasPage() {
         }
         onClose={() => setModalSuccess(null)}
       />
-
 
       {/* Error */}
       <FeedbackModal

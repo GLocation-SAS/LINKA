@@ -72,7 +72,7 @@ export default function FiltrosAudiencias({
                 alignItems={{ xs: "stretch", md: "center" }}
             >
                 <TextField
-                    placeholder="Nombre de audiencia"
+                    placeholder="Bucar por nombre de audiencia"
                     size="small"
                     value={nombreAudiencia}
                     onChange={(e) => { setNombreAudiencia(e.target.value); triggerNextTick(); }}
@@ -93,7 +93,7 @@ export default function FiltrosAudiencias({
                 />
 
                 <TextField
-                    placeholder="Nombre de campaña"
+                    placeholder="Buscar por nombre de campaña"
                     size="small"
                     value={nombreCampana}
                     onChange={(e) => { setNombreCampana(e.target.value); triggerNextTick(); }}
@@ -123,7 +123,7 @@ export default function FiltrosAudiencias({
                     customInput={<CustomDateInput />}
                 />
 
-                <Button color="inherit" variant="outlined" onClick={onClear} disabled={searching}>
+                <Button color="info" variant="outlined" sx={{ fontSize: " 12px !important" }} onClick={onClear} disabled={searching}>
                     Limpiar
                 </Button>
 

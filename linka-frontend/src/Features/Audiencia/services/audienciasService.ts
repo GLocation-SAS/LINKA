@@ -68,6 +68,7 @@ export const listarAudiencias = async (params: {
   fechaFin?: string;    // ISO
   limit?: number;
   page?: number;
+  idUsuario?: string; // Filtrar por usuario
 }) => {
   const { data } = await api.get<ListResponse>("/audiencias/listar", { params });
   return data;
@@ -103,7 +104,13 @@ export const eliminarAudiencia = async (idAudiencia: string) => {
 
 
 // GET /campanas/listar-todas
-export const listarCampanasTodas = async (): Promise<CampanaItem[]> => {
-  const { data } = await api.get<CampanaItem[]>("/campanas/listar-todas");
+// GET /campanas/listar-todas
+export const listarCampanasTodas = async (
+  params?: { idUsuario?: string }
+): Promise<CampanaItem[]> => {
+  const { data } = await api.get<CampanaItem[]>("/campanas/listar-todas", {
+    params,
+  });
   return data;
 };
+

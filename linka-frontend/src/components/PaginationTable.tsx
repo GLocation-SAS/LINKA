@@ -31,6 +31,16 @@ export default function PaginationTable({
           value={limit}
           onChange={(e) => onChangeLimit(Number(e.target.value))}
           size="small"
+          // 👇 Forzar despliegue hacia arriba
+          MenuProps={{
+            anchorOrigin: { vertical: "top", horizontal: "left" },
+            transformOrigin: { vertical: "bottom", horizontal: "left" },
+            PaperProps: {
+              sx: {
+                maxHeight: 260, // opcional: limita la altura
+              },
+            },
+          }}
         >
           {[10, 20, 30, 40, 50, 100].map((num) => (
             <MenuItem key={num} value={num}>

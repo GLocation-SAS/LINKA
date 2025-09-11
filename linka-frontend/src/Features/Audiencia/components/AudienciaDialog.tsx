@@ -18,6 +18,7 @@ import {
     obtenerAudiencia,
 } from "../services/audienciasService";
 import Loading from "../../../components/Loading";
+import { useUser } from "../../../Context/UserContext";
 
 type Mode = "create" | "edit";
 
@@ -51,6 +52,9 @@ export default function AudienciaDialog({
     const [originalContactos, setOriginalContactos] = useState<any[]>([]);
     const [loadingContactos, setLoadingContactos] = useState(false);
 
+    const { uid, rol } = useUser();
+
+    // 🔹 Cargar campañas y datos de la audiencia si estamos en edición
     // 🔹 Cargar campañas y datos de la audiencia si estamos en edición
     useEffect(() => {
         if (open) {
@@ -84,9 +88,14 @@ export default function AudienciaDialog({
                 setNumeroContacto("+57");
             }
 
-            listarCampanasTodas().then(setCampanas).catch(console.error);
+            listarCampanasTodas(
+                rol === "admin" ? {} : { idUsuario: uid ?? undefined } // 👈 solo si no es admin
+            )
+                .then(setCampanas)
+                .catch(console.error);
         }
-    }, [open, initial, mode]);
+    }, [open, initial, mode, uid, rol]);
+
 
     // ➕ Agregar contacto manual
     const addContacto = () => {
@@ -236,11 +245,11 @@ export default function AudienciaDialog({
 
                             <Box
                                 sx={{
-                                    border: "2px dashed",
+                                    border: "1px dashed",
                                     borderColor: "secondary.main",
                                     borderRadius: 2,
                                     p: 2,
-                                    bgcolor: "rgba(243,137,51,0.1)",
+                                    bgcolor: "rgba(243,137,51,0.08)",
                                     display: "flex",
                                     flexDirection: "column",
                                     gap: 2,
@@ -261,8 +270,8 @@ export default function AudienciaDialog({
                                 </Button>
 
                                 <Button
-                                    variant="outlined"
-                                    color="info"
+                                    variant="contained"
+                                    color="neutral"
                                     startIcon={<DownloadIcon />}
                                     onClick={handleDownloadTemplate}
                                     sx={{
@@ -291,6 +300,7 @@ export default function AudienciaDialog({
                             value={nombreContacto}
                             onChange={(e) => setNombreContacto(e.target.value)}
                             fullWidth
+                            sx={{ marginTop: "1% !important" }}
                         />
 
                         <Stack direction="row" spacing={1} alignItems="center">
@@ -300,9 +310,10 @@ export default function AudienciaDialog({
                                 onChange={(_, __, ___, formattedValue) => {
                                     setNumeroContacto(formattedValue);
                                 }}
+                                placeholder="Ingresar número de teléfono"   // 👈 aquí el placeholder
                                 inputStyle={{
                                     width: "100%",
-                                    height: "42px",
+                                    height: "50px",
                                     borderRadius: "8px",
                                     backgroundColor: "#F5F5F5",
                                     border: "1px solid #D0D0D0",
@@ -321,14 +332,23 @@ export default function AudienciaDialog({
                                 }}
                                 containerStyle={{ width: "100%" }}
                             />
+
                             <Button
                                 variant="contained"
                                 color="secondary"
                                 startIcon={<AddIcon />}
                                 onClick={addContacto}
+                                sx={{
+                                    height: "50px !important",
+                                    "& .MuiButton-startIcon": {
+                                        marginRight: "2px !important", // 👈 ajusta la separación (default es 8px)
+                                    },
+                                    width: "50% !important",
+                                }}
                             >
                                 Añadir
                             </Button>
+
                         </Stack>
 
                         <Paper
@@ -380,7 +400,7 @@ export default function AudienciaDialog({
                 </Stack>
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2 }}>
-                <Button onClick={onClose} variant="outlined">
+                <Button onClick={onClose} color="info" variant="outlined">
                     Cancelar
                 </Button>
                 <Button

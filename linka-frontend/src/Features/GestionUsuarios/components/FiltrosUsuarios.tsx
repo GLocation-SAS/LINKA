@@ -126,6 +126,7 @@ export default function FiltrosUsuarios({ onFilter }: Props) {
                     variant="outlined"
                     color="info"
                     size="small"
+                    sx={{ fontSize: " 12px !important" }}
                     onClick={handleClearFilters}
                 >
                     Limpiar

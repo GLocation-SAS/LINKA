@@ -45,7 +45,7 @@ export default function CampanaDialog({
         </DialogTitle>
 
         {/* Contenido */}
-        <DialogContent sx={{ px: 0 }}>
+        <DialogContent sx={{ px: 0 }} dividers>
           <Typography fontWeight={600} mb={1}>
             Nombre de la campaña
           </Typography>
@@ -58,7 +58,7 @@ export default function CampanaDialog({
         </DialogContent>
 
         {/* Botones */}
-        <DialogActions sx={{ px: 0, pt: 3 }}>
+        <DialogActions sx={{ px: 0, pt: 3 }} >
           <Button
             onClick={onClose}
             variant="outlined"

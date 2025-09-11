@@ -119,17 +119,17 @@ export function mapAuthErrorToMessage(err: any): string {
 
   // Cuenta deshabilitada
   if (text.includes("auth/user-disabled") || text.includes("user_disabled")) {
-    return "❌ Tu cuenta está inactiva. Por favor comunícate con el administrador para activarla.";
+    return "Tu cuenta está inactiva. Por favor comunícate con el administrador para activarla.";
   }
 
   // Otros casos comunes (opcional)
   if (text.includes("auth/invalid-credential") || text.includes("wrong-password")) {
-    return "❌ Correo o contraseña incorrectos.";
+    return "Correo o contraseña incorrectos.";
   }
   if (text.includes("auth/user-not-found")) {
-    return "❌ No existe una cuenta con ese correo.";
+    return " No existe una cuenta con ese correo.";
   }
 
   // Genérico
-  return "❌ No se pudo iniciar sesión. Inténtalo de nuevo.";
+  return "No se pudo iniciar sesión. Inténtalo de nuevo.";
 }

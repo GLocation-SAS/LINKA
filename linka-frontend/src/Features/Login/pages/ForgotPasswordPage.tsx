@@ -120,12 +120,13 @@ export default function ForgotPasswordPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             variant="outlined"
+            sx={{marginTop: "3% !important"}}
             InputLabelProps={{
               shrink: false, // evita el floating label
               sx: {
                 "&.Mui-focused": {
                   display: "none", // 👈 oculta cuando está en focus
-                },
+                }, 
               },
             }}
           />
