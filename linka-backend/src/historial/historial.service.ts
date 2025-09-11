@@ -12,13 +12,6 @@ export class HistorialService {
 
   /**
    * Obtener historial con filtros y paginación
-   * @param usuario nombre del usuario (display_name)
-   * @param tipo tipo de acción: campaña | audiencia | mensaje
-   * @param fechaInicio fecha mínima (YYYY-MM-DD)
-   * @param fechaFin fecha máxima (YYYY-MM-DD)
-   * @param page número de página
-   * @param limit cantidad de resultados por página
-   * @param order asc | desc
    */
   async getHistorialGeneral(
     usuario?: string,
@@ -27,39 +20,49 @@ export class HistorialService {
     fechaFin?: string,
     page = 1,
     limit = 10,
-    order: 'asc' | 'desc' = 'desc',
+    order: 'asc' | 'desc' = 'desc', // por defecto más reciente primero
   ) {
     const dataset = 'LINKA';
     const projectId = 'converso-346218';
 
-    // Query Campañas
+    // Helper para normalizar fechas (string | Date | { value: string })
+    const toMillis = (f: any): number => {
+      if (!f) return 0;
+      if (f instanceof Date) return f.getTime();
+      if (typeof f === 'string' || typeof f === 'number') return new Date(f).getTime();
+      if (typeof f === 'object') {
+        const v = (f as any).value ?? (f as any).timestamp ?? null;
+        return v ? new Date(v).getTime() : new Date(String(f)).getTime();
+      }
+      return new Date(String(f)).getTime();
+    };
+
+    // Queries
     const [campanas] = await this.bigquery.query({
       query: `
-        SELECT idCampana, nombre, fecha_creacion, idUsuario
-        FROM \`${projectId}.${dataset}.Campanas\`
-      `,
+      SELECT idCampana, nombre, fecha_creacion, idUsuario
+      FROM \`${projectId}.${dataset}.Campanas\`
+    `,
     });
 
-    // Query Audiencias
     const [audiencias] = await this.bigquery.query({
       query: `
-        SELECT idAudiencia, nombre, fecha_creacion, idUsuario
-        FROM \`${projectId}.${dataset}.Audiencias\`
-      `,
+      SELECT idAudiencia, nombre, fecha_creacion, idUsuario
+      FROM \`${projectId}.${dataset}.Audiencias\`
+    `,
     });
 
-    // Query Mensajes
     const [mensajes] = await this.bigquery.query({
       query: `
-        SELECT idMensaje, contenido, tipo, fecha_envio, idUsuario
-        FROM \`${projectId}.${dataset}.Mensajes\`
-      `,
+      SELECT idMensaje, contenido, tipo, fecha_envio, idUsuario
+      FROM \`${projectId}.${dataset}.Mensajes\`
+    `,
     });
 
-    // Unificar y enriquecer con usuarios
+    // Unificar
     const allEvents = [
       ...campanas.map((c: any) => ({
-        tipo: 'campana',
+        tipo: 'campana', // 👈 ojo: aquí no lleva tilde
         accion: `creó la campaña "${c.nombre}"`,
         fecha: c.fecha_creacion,
         idUsuario: c.idUsuario,
@@ -86,48 +89,46 @@ export class HistorialService {
         return {
           usuario: userData ? userData.display_name : 'Usuario desconocido',
           accion: ev.accion,
-          fecha: ev.fecha,
+          fecha: ev.fecha,              // mantenemos la forma original
+          _fechaMs: toMillis(ev.fecha), // 👈 campo auxiliar para ordenar
           tipo: ev.tipo,
         };
       }),
     );
 
-    // 🔍 Aplicar filtros
+    // 🔍 Filtros
     let filtered = enriched;
 
     if (usuario) {
       const usuarioLower = usuario.toLowerCase();
-      filtered = filtered.filter((e) =>
-        e.usuario.toLowerCase().includes(usuarioLower),
-      );
+      filtered = filtered.filter((e) => e.usuario.toLowerCase().includes(usuarioLower));
     }
 
     if (tipo) {
+      // Nota: en el array usamos 'campana' sin tilde; asegúrate de enviar el mismo literal desde el front
       filtered = filtered.filter((e) => e.tipo === tipo);
     }
 
     if (fechaInicio) {
-      const inicio = new Date(fechaInicio);
-      filtered = filtered.filter((e) => new Date(e.fecha) >= inicio);
+      const inicioMs = new Date(fechaInicio).getTime();
+      filtered = filtered.filter((e) => e._fechaMs >= inicioMs);
     }
 
     if (fechaFin) {
-      const fin = new Date(fechaFin);
-      filtered = filtered.filter((e) => new Date(e.fecha) <= fin);
+      const finMs = new Date(fechaFin).getTime();
+      filtered = filtered.filter((e) => e._fechaMs <= finMs);
     }
 
-    // 📌 Ordenar
+    // 📌 Orden (desc por defecto → más recientes primero)
     filtered.sort((a, b) =>
-      order === 'asc'
-        ? new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
-        : new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+      order === 'asc' ? a._fechaMs - b._fechaMs : b._fechaMs - a._fechaMs,
     );
 
     // 📄 Paginación
     const totalCount = filtered.length;
     const totalPages = Math.ceil(totalCount / limit);
     const start = (page - 1) * limit;
-    const paginated = filtered.slice(start, start + limit);
+    const paginated = filtered.slice(start, start + limit).map(({ _fechaMs, ...rest }) => rest); // ocultamos el auxiliar
 
     return {
       data: paginated,
@@ -140,4 +141,6 @@ export class HistorialService {
       },
     };
   }
+
+
 }

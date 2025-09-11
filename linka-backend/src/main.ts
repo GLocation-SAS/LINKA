@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
 import morgan from 'morgan';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -32,6 +33,9 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // ✅ Iniciar servidor
+  app.use(json({ limit: '1024mb' }));
+  app.use(urlencoded({ extended: true, limit: '1024mb' }));
+  
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`🚀 Servidor corriendo en http://localhost:${port}/api/docs`);

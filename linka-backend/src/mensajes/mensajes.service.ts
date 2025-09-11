@@ -18,14 +18,14 @@ export class MensajesService {
         idContacto: string,
         contenido: string,
         tipo: 'texto' | 'imagen' | 'video',
-        url_contenido?: string, // 🔹 Nuevo campo opcional
+        url_contenido?: string, // 🔹 Opcional
     ) {
         const idMensaje = uuidv4();
 
         const query = `
     INSERT INTO \`${this.projectId}.${this.dataset}.Mensajes\`
     (idMensaje, idCampana, idUsuario, idContacto, contenido, tipo, fecha_envio, estado, url_contenido)
-    VALUES (@idMensaje, @idCampana, @idUsuario, @idContacto, @contenido, @tipo, CURRENT_TIMESTAMP(), 'pendiente', @url_contenido)
+    VALUES (@idMensaje, @idCampana, @idUsuario, @idContacto, @contenido, @tipo, CURRENT_TIMESTAMP(), 'Enviado', @url_contenido)
   `;
 
         await this.bigquery.query({
@@ -37,7 +37,10 @@ export class MensajesService {
                 idContacto,
                 contenido,
                 tipo,
-                url_contenido: url_contenido ?? null, // 👈 Si no se pasa, queda null
+                url_contenido: url_contenido ?? null, // 👈 si no se pasa, se guarda NULL
+            },
+            types: {
+                url_contenido: 'STRING', // 👈 BigQuery ya sabe que null es de tipo STRING
             },
         });
 
@@ -45,10 +48,11 @@ export class MensajesService {
             message: '✅ Mensaje creado correctamente',
             idMensaje,
             tipo,
-            estado: 'pendiente',
+            estado: 'Enviado',
             url_contenido: url_contenido ?? null,
         };
     }
+
 
 
     /**

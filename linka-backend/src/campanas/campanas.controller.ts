@@ -54,7 +54,7 @@ export class CampanasController {
     @ApiOperation({
         summary: 'Listar campañas con filtros y paginación',
         description:
-            'Puedes filtrar campañas por nombre (parcial), rango de fechas (fechaInicio, fechaFin) y aplicar paginación con page + limit.',
+            'Puedes filtrar campañas por nombre (parcial), rango de fechas (fechaInicio, fechaFin), idUsuario y aplicar paginación con page + limit.',
     })
     @ApiQuery({
         name: 'nombre',
@@ -75,6 +75,12 @@ export class CampanasController {
         example: '2025-09-06',
     })
     @ApiQuery({
+        name: 'idUsuario',
+        required: false,
+        description: 'Filtrar campañas por ID de usuario',
+        example: 'uid123',
+    })
+    @ApiQuery({
         name: 'page',
         required: false,
         description: 'Número de página (default: 1)',
@@ -86,44 +92,11 @@ export class CampanasController {
         description: 'Cantidad de resultados por página (default: 10)',
         example: 5,
     })
-    @ApiResponse({
-        status: 200,
-        description: '✅ Lista de campañas obtenida correctamente',
-        schema: {
-            example: {
-                data: [
-                    {
-                        idCampana: 'cmp123',
-                        nombre: 'Campaña Septiembre',
-                        fecha_creacion: '2025-09-05T14:00:00.000Z',
-                        idUsuario: 'uid123',
-                        audienciasCount: 2,   // 👈 número de audiencias asociadas
-                        contactosCount: 45,   // 👈 número de contactos en esas audiencias
-                    },
-                    {
-                        idCampana: 'cmp124',
-                        nombre: 'Campaña Octubre',
-                        fecha_creacion: '2025-09-07T09:30:00.000Z',
-                        idUsuario: 'uid456',
-                        audienciasCount: 0,   // 👈 si no tiene audiencias
-                        contactosCount: 0,    // 👈 si no tiene contactos
-                    },
-                ],
-                pagination: {
-                    page: 1,
-                    limit: 5,
-                    totalCount: 2,
-                    totalPages: 1,
-                    hasNextPage: false,
-                },
-            }
-            ,
-        },
-    })
     async listarCampanas(
         @Query('nombre') nombre?: string,
         @Query('fechaInicio') fechaInicio?: string,
         @Query('fechaFin') fechaFin?: string,
+        @Query('idUsuario') idUsuario?: string,
         @Query('page') page = 1,
         @Query('limit') limit = 10,
     ) {
@@ -133,6 +106,7 @@ export class CampanasController {
             fechaFin,
             Number(page),
             Number(limit),
+            idUsuario,
         );
     }
 
@@ -140,7 +114,7 @@ export class CampanasController {
     @ApiOperation({
         summary: 'Listar todas las campañas',
         description:
-            'Devuelve todas las campañas sin paginación. Se puede aplicar un filtro opcional por nombre (texto parcial).',
+            'Devuelve todas las campañas sin paginación. Se puede aplicar un filtro opcional por nombre (texto parcial) o idUsuario.',
     })
     @ApiQuery({
         name: 'nombre',
@@ -148,28 +122,17 @@ export class CampanasController {
         description: 'Texto parcial para filtrar campañas por nombre',
         example: 'Septiembre',
     })
-    @ApiResponse({
-        status: 200,
-        description: '✅ Lista de todas las campañas obtenida correctamente',
-        schema: {
-            example: [
-                {
-                    idCampana: 'cmp_20250906_ab12cd',
-                    nombre: 'Campaña Septiembre',
-                    fecha_creacion: '2025-09-06T15:00:00.000Z',
-                    idUsuario: 'uid123',
-                },
-                {
-                    idCampana: 'cmp_20250901_ef45gh',
-                    nombre: 'Campaña Septiembre Test',
-                    fecha_creacion: '2025-09-01T10:00:00.000Z',
-                    idUsuario: 'uid456',
-                },
-            ],
-        },
+    @ApiQuery({
+        name: 'idUsuario',
+        required: false,
+        description: 'Filtrar campañas por ID de usuario',
+        example: 'uid123',
     })
-    async listarTodasCampanas(@Query('nombre') nombre?: string) {
-        return this.campanasService.listarTodasCampanas(nombre);
+    async listarTodasCampanas(
+        @Query('nombre') nombre?: string,
+        @Query('idUsuario') idUsuario?: string,
+    ) {
+        return this.campanasService.listarTodasCampanas(nombre, idUsuario);
     }
 
     @Get('obtener/:idCampana')

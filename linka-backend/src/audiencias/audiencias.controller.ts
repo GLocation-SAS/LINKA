@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Param, Body, Patch ,Query} from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, Patch, Query } from '@nestjs/common';
 import { AudienciasService } from './audiencias.service';
 import {
     ApiTags,
@@ -80,7 +80,7 @@ export class AudienciasController {
     @ApiOperation({
         summary: 'Listar audiencias con filtros y paginación',
         description:
-            'Puedes filtrar por nombre de audiencia, nombre de campaña y rango de fechas. También soporta paginación con `page` y `limit`.',
+            'Puedes filtrar por nombre de audiencia, nombre de campaña, rango de fechas y también por idUsuario. Soporta paginación con `page` y `limit`.',
     })
     @ApiQuery({
         name: 'nombreAudiencia',
@@ -105,6 +105,12 @@ export class AudienciasController {
         required: false,
         description: 'Fecha máxima en formato YYYY-MM-DD',
         example: '2025-09-07',
+    })
+    @ApiQuery({
+        name: 'idUsuario',
+        required: false,
+        description: 'Filtrar audiencias por ID de usuario',
+        example: 'uid123',
     })
     @ApiQuery({
         name: 'page',
@@ -149,6 +155,7 @@ export class AudienciasController {
         @Query('nombreCampana') nombreCampana?: string,
         @Query('fechaInicio') fechaInicio?: string,
         @Query('fechaFin') fechaFin?: string,
+        @Query('idUsuario') idUsuario?: string,
         @Query('page') page = 1,
         @Query('limit') limit = 10,
     ) {
@@ -159,8 +166,10 @@ export class AudienciasController {
             fechaFin,
             Number(page),
             Number(limit),
+            idUsuario,
         );
     }
+
 
     @Get('obtener/:idAudiencia')
     @ApiOperation({ summary: 'Obtener audiencia por ID con campaña y contactos' })

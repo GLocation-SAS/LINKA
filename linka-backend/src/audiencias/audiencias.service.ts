@@ -81,14 +81,8 @@ export class AudienciasService {
     }
 
     /**
-     * Listar audiencias con filtros, cantidad de contactos, nombre de campaña y paginación
-     * @param nombreAudiencia texto parcial para buscar en el nombre de la audiencia
-     * @param nombreCampana texto parcial para buscar en el nombre de la campaña
-     * @param fechaInicio fecha mínima en formato YYYY-MM-DD
-     * @param fechaFin fecha máxima en formato YYYY-MM-DD
-     * @param page número de página (default: 1)
-     * @param limit cantidad de resultados por página (default: 10)
-     */
+ * Listar audiencias con filtros, cantidad de contactos, nombre de campaña y paginación
+ */
     async listarAudiencias(
         nombreAudiencia?: string,
         nombreCampana?: string,
@@ -96,6 +90,7 @@ export class AudienciasService {
         fechaFin?: string,
         page = 1,
         limit = 10,
+        idUsuario?: string,   // 👈 nuevo filtro
     ) {
         let conditions: string[] = [];
         let params: Record<string, any> = {};
@@ -120,41 +115,46 @@ export class AudienciasService {
             params.fechaFin = fechaFin;
         }
 
+        if (idUsuario) {
+            conditions.push(`a.idUsuario = @idUsuario`);
+            params.idUsuario = idUsuario;
+        }
+
         const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
         // Query principal con paginación
         const query = `
-    SELECT 
-      a.idAudiencia,
-      a.nombre AS nombre_audiencia,
-      a.fecha_creacion,
-      a.idCampana,
-      c.nombre AS nombre_campana,
-      a.idUsuario,
-      COUNT(ct.idContacto) AS total_contactos
-    FROM \`${this.projectId}.${this.dataset}.Audiencias\` a
-    LEFT JOIN \`${this.projectId}.${this.dataset}.Campanas\` c
-      ON a.idCampana = c.idCampana
-    LEFT JOIN \`${this.projectId}.${this.dataset}.Contactos\` ct
-      ON a.idAudiencia = ct.idAudiencia
-    ${whereClause}
-    GROUP BY a.idAudiencia, a.nombre, a.fecha_creacion, a.idCampana, c.nombre, a.idUsuario
-    ORDER BY a.fecha_creacion DESC
-    LIMIT @limit OFFSET @offset
-  `;
-
-        // Query para contar total
-        const countQuery = `
-    SELECT COUNT(*) as total
-    FROM (
-      SELECT a.idAudiencia
+      SELECT 
+        a.idAudiencia,
+        a.nombre AS nombre_audiencia,
+        a.fecha_creacion,
+        a.idCampana,
+        c.nombre AS nombre_campana,
+        a.idUsuario,
+        COUNT(ct.idContacto) AS total_contactos
       FROM \`${this.projectId}.${this.dataset}.Audiencias\` a
       LEFT JOIN \`${this.projectId}.${this.dataset}.Campanas\` c
         ON a.idCampana = c.idCampana
+      LEFT JOIN \`${this.projectId}.${this.dataset}.Contactos\` ct
+        ON a.idAudiencia = ct.idAudiencia
       ${whereClause}
-      GROUP BY a.idAudiencia
-    )
-  `;
+      GROUP BY a.idAudiencia, a.nombre, a.fecha_creacion, a.idCampana, c.nombre, a.idUsuario
+      ORDER BY a.fecha_creacion DESC
+      LIMIT @limit OFFSET @offset
+    `;
+
+        // Query para contar total
+        const countQuery = `
+      SELECT COUNT(*) as total
+      FROM (
+        SELECT a.idAudiencia
+        FROM \`${this.projectId}.${this.dataset}.Audiencias\` a
+        LEFT JOIN \`${this.projectId}.${this.dataset}.Campanas\` c
+          ON a.idCampana = c.idCampana
+        ${whereClause}
+        GROUP BY a.idAudiencia
+      )
+    `;
 
         const offset = (page - 1) * limit;
 

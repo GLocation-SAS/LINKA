@@ -10,11 +10,13 @@ import { CampanasModule } from './campanas/campanas.module';
 import { AudienciasModule } from './audiencias/audiencias.module';
 import { MensajesModule } from './mensajes/mensajes.module';
 import { AuthModule } from './auth/auth.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
-  }), FirebaseModule, BigqueryModule, UsuariosModule, HistorialModule, CampanasModule, AudienciasModule, MensajesModule, AuthModule],
+  }), FirebaseModule, BigqueryModule, UsuariosModule, HistorialModule, CampanasModule, AudienciasModule, MensajesModule, AuthModule, UploadsModule, StorageModule],
   controllers: [AppController],
   providers: [AppService],
 })
